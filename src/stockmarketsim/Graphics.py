@@ -36,16 +36,14 @@ class Graphics(tk.Tk):
         left.pack(side=tk.LEFT, padx=10)
         #LOAD DATA
         self.data_path = tk.StringVar()
-        tk.Button(left, text="Load Data", command=self.load_data).grid(row=2, column=0, padx=5, pady=2, sticky='w')
+        tk.Button(left, text="Load Data", command=self.browse_files).grid(row=2, column=0, padx=5, pady=2, sticky='w')
         
-     
         tk.Entry(left, textvariable=self.data_path, width=30).grid(row=2, column=1, padx=5, pady=2, sticky="w")
         
         # 3. Button to (re)draw the candles
         button = tk.Button(left, text="Draw candlesticks", command=self.update_plot).grid(row=0, column=0, padx=5, pady=2, sticky="w")
         #button.pack(side=tk.BOTTOM, pady=10)
 
-     
         # 5. add bollinger
         # Row container at the bottom
         button_bollinger = tk.Button(left, text='Bollinger', command=self.add_bollinger).grid(row=1, column=0, padx=5, pady=2, sticky="w")
@@ -138,3 +136,10 @@ class Graphics(tk.Tk):
         else:
             return
         
+    def browse_files(self):
+        filename = tk.filedialog.askopenfilename(
+            initialdir="/",
+            title = "Select a File",
+            filetypes=(("Excel files", "*.xlsx"), ("All files", "*.*")),
+        )
+        self.loader.load_data(file_path=Path(filename))

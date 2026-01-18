@@ -28,7 +28,7 @@ class LoadData:
                 s = df[col].astype(str)
                 s = (
                     s.str.replace(";", "", regex=False)
-                     .str.replace(",", ".", regex=False)
+                    .str.replace(",", ".", regex=False)
                 )
                 df[col] = pd.to_numeric(s, errors="coerce")
 
