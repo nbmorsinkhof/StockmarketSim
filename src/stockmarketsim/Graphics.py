@@ -4,6 +4,7 @@ from matplotlib.figure import Figure
 from stockmarketsim.LoadData import LoadData
 import stockmarketsim.Indicators as Indicators
 from pathlib import Path
+import time
 
 class Graphics(tk.Tk):
     def __init__(self, loader: LoadData):
@@ -59,6 +60,13 @@ class Graphics(tk.Tk):
         self.window_length_x = tk.StringVar()
         tk.Button(left, text='Set horizontal window length', command=self.set_window_length_x).grid(row=3, column=0, pady=2, padx=5, sticky='w')
         tk.Entry(left, textvariable=self.window_length_x).grid(row=3, column=1, pady=2, padx=5, sticky='w')
+        self.xwindowLength = tk.IntVar()
+        tk.Scale(left, variable = self.xwindowLength, from_=0, to_=100, orient="horizontal").grid(row=3, column=2, pady=2, padx=5, sticky='w')
+       
+        # Set Date
+        self.first_date = tk.StringVar()
+        tk.Button(left, text='Set Date', command=self.set_first_date).grid(row=5, column=0, pady=2, padx=5, sticky='w')
+        tk.Entry(left, textvariable=self.first_date).grid(row=5, column=1, pady=2, padx=5, sticky='w')
         
         # Date label
 
@@ -69,19 +77,22 @@ class Graphics(tk.Tk):
         right = tk.Frame(controls_row)
         right.pack(side=tk.RIGHT, padx=10)
         #Step back
-        tk.Button(right, text="Step back", command=self.plot_step_back).pack(side=tk.LEFT, padx=5)
+        tk.Button(right, text="Step back", command=self.plot_step_back).grid(row=0, column=0, pady=2, padx=5, sticky='w')#rid(side=tk.LEFT, padx=5)
         #STEP
-        button_update = tk.Button(right, text="Step next", command=self.plot_step).pack(side=tk.LEFT, padx=5)
+        button_update = tk.Button(right, text="Step next", command=self.plot_step).grid(row=0, column=1, pady=2, padx=5, sticky='w')#pack(side=tk.LEFT, padx=5)
         # Run 
-        button_run = tk.Button(right, text='Run', command=self.run).pack(side=tk.LEFT, padx=5)
+        button_run = tk.Button(right, text='Run', command=self.run).grid(row=0, column=2, pady=2, padx=5, sticky='w')#pack(side=tk.LEFT, padx=5)
 
         # Stop
-        button_stop = tk.Button(right, text='Stop', command=self.stop_run).pack(side=tk.LEFT, padx=5)
+        button_stop = tk.Button(right, text='Stop', command=self.stop_run).grid(row=0, column=3, pady=2, padx=5, sticky='w')#pack(side=tk.LEFT, padx=5)
+
+        self.speed = tk.IntVar()
+        tk.Scale(right, variable = self.speed, from_=0, to_=100, orient="horizontal").grid(row=1, column=0, pady=2, padx=5, sticky='w')
 
 
     def update_plot(self):
         # let LoadData draw on our Axes
-        self.loader.plot_klines(self.ax)
+        self.loader.plot_klines(self.ax, self.xwindowLength.get())
         self.canvas.draw_idle()
         self.date_label.set(f"date at index {0}: {self.loader.current_date}")
 
@@ -107,9 +118,12 @@ class Graphics(tk.Tk):
     def schedule_next_step(self):
         if not self.is_running:
             return
-        self.plot_step()
-        # call this function again after 50 ms
-        self.after(50, self.schedule_next_step)
+        
+        tick = int(((100 - self.speed.get()) / 100.0) * 200 + 10) 
+        if self.speed.get()>0:
+            self.plot_step()
+            
+        self.after(tick, self.schedule_next_step)
 
     def add_bollinger(self):
         print("sting_var:", self.input_bollinger_length.get())
@@ -117,24 +131,32 @@ class Graphics(tk.Tk):
         
         if N>1:
             self.indicators.append(Indicators.bollinger(LoadData=self.loader, N=N))
+            self.update_plot()
         else:
             print("Length not sufficient: ", N)
         print(len(self.indicators))
     
     def remove_bollinger(self):
         self.indicators.pop(-1)
+        self.update_plot()
     
     def load_data(self):
         print("loading data")
         data_path = self.data_path.get()
         self.loader.load_data(file_path=Path(data_path))
+        self.update_plot()
         
     def set_window_length_x(self):
         N = int(self.window_length_x.get())
         if N>5:
             self.loader.set_window_length_x(N)
+            for indicator in self.indicators:
+                indicator.reset_window()
+                
+            self.update_plot()
         else:
             return
+        
         
     def browse_files(self):
         filename = tk.filedialog.askopenfilename(
@@ -143,3 +165,8 @@ class Graphics(tk.Tk):
             filetypes=(("Excel files", "*.xlsx"), ("All files", "*.*")),
         )
         self.loader.load_data(file_path=Path(filename))
+        
+    def set_first_date(self):
+        date = self.first_date.get()
+        self.loader.set_date(date=date)
+        self.update_plot()

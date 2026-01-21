@@ -34,7 +34,7 @@ class LoadData:
 
         self.df_data = df
 
-    def plot_klines(self, ax):
+    def plot_klines(self, ax, xwindowLength: int):
         """
         Draw candlesticks on the given Matplotlib Axes (ax).
         Does NOT create its own Figure or call plt.show().
@@ -42,39 +42,18 @@ class LoadData:
         df = self.df_data
 
         # pick a slice
-        df_part = df.iloc[self.window[0]: self.window[1], :].reset_index(drop=True)
-        self.df_part = df_part
-        x = np.arange(len(df_part))  # x indices from 0 to len(df_part)-1
+        df.iloc[self.window[0]: self.window[1], :].reset_index(drop=True)
+        
+        high = np.array(df["high"]).astype(float)[self.window[0]: self.window[1]]
+        low = np.array(df["low"]).astype(float)[self.window[0]: self.window[1]]
+
+        x = np.arange(len(high))  # x indices from 0 to len(df_part)-1
 
         ax.clear()  # clear previous contents
 
-        width = 0.6
-
-        for i, row in df_part.iterrows():
-            o = row["open"]
-            h = row["high"]
-            l = row["low"]
-            c = row["close"]
-
-            # Wick
-            ax.vlines(x[i], l, h, color='black', linewidth=1)
-
-            # Body
-            lower = min(o, c)
-            height = abs(c - o)
-            color = 'red' if o > c else 'green'
-
-            rect = Rectangle(
-                (x[i] - width / 2, lower),
-                width,
-                height if height != 0 else 0.001,
-                facecolor=color,
-                edgecolor='black',
-                linewidth=0.5,
-            )
-            ax.add_patch(rect)
-
         #indicators
+        ax.plot(x, high, linewidth=2, color='green')
+        ax.plot(x, low, linewidth=2, color='red')
         print(len(self.indicators))
         for indicator in self.indicators:
             indicator.plot(ax)
@@ -83,7 +62,8 @@ class LoadData:
         ax.set_ylabel("Price")
         ax.set_title("Candlestick chart (manual)")
         ax.grid(True)
-        ax.set_xlim(-1, len(df_part) + 1)
+        ax.set_xlim(-1, len(high) + int(len(high)*xwindowLength/100))
+        
 
     def plot_step(self):
         self.window[0]+=1
@@ -103,6 +83,16 @@ class LoadData:
     def set_window_length_x(self, N):
         self.N_window = N
         self.window[1] = self.window[0] + N
+    
+    def set_date(self, date: str):
+        date_str = date + " 00:00:00"
+        matches = self.df_data.index[self.df_data["date"] == date_str]
+        idx = matches[0] if not matches.empty else None
+        if idx !=None:
+            self.window[0] = idx
+            self.window[1] = idx + self.N_window
+
+    
 
 
         
