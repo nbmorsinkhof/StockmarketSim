@@ -52,8 +52,8 @@ class LoadData:
         ax.clear()  # clear previous contents
 
         #indicators
-        ax.plot(x, high, linewidth=2, color='green')
-        ax.plot(x, low, linewidth=2, color='red')
+        ax.plot(x, high, linewidth=1, color='green')
+        ax.plot(x, low, linewidth=1, color='red')
         print(len(self.indicators))
         for indicator in self.indicators:
             indicator.plot(ax)

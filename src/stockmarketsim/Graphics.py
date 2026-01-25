@@ -76,12 +76,14 @@ class Graphics(tk.Tk):
 
         # 5. add bollinger
         # Row container at the bottom
-        button_bollinger = tk.Button(left, text='Bollfinger', command=self.add_bollinger).grid(row=1, column=0, padx=5, pady=2, sticky="w")
+        button_bollinger = tk.Button(left, text='Bollinger', command=self.add_bollinger).grid(row=1, column=0, padx=5, pady=2, sticky="w")
 
         # Get bollinger window size
         self.input_bollinger_length = tk.StringVar()
-        entry_bollinger_length = tk.Entry(left, textvariable=self.input_bollinger_length, width=15).grid(row=1, column=1, padx=5, pady=2, sticky="w")
+        entry_bollinger_length = tk.Entry(left, textvariable=self.input_bollinger_length, width=5).grid(row=1, column=1, padx=5, pady=2, sticky="w")
         
+        self.input_bollinger_std = tk.StringVar()
+        entry_bollinger_std = tk.Entry(left, textvariable=self.input_bollinger_std, width=5).grid(row=1, column=1, padx=5, pady=2, sticky="e")
         # Remove bollinger
         tk.Button(left, text='Remove Bollinger', command=self.remove_bollinger).grid(row=1, column=2, padx=5, pady=2, sticky="w")
         
@@ -143,7 +145,7 @@ class Graphics(tk.Tk):
         if not self.is_running:
             return
         
-        tick = int(((100 - self.speed.get()) / 100.0) * 200 + 2) 
+        tick = int(((100 - self.speed.get()) / 100.0) * 800 + 2) 
         if self.speed.get()>0:
             self.plot_step()
             
@@ -152,9 +154,10 @@ class Graphics(tk.Tk):
     def add_bollinger(self):
         print("sting_var:", self.input_bollinger_length.get())
         N = int(self.input_bollinger_length.get())
+        N_std = float(self.input_bollinger_std.get())
         
-        if N>1:
-            self.indicators.append(Indicators.bollinger(LoadData=self.loader, N=N))
+        if N>1 and N_std>0:
+            self.indicators.append(Indicators.bollinger(LoadData=self.loader, N=N, N_std=N_std))
             self.update_plot()
         else:
             print("Length not sufficient: ", N)
