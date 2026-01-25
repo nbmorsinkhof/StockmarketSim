@@ -145,10 +145,15 @@ class Graphics(tk.Tk):
         if not self.is_running:
             return
         
+<<<<<<< HEAD
         v = ((self.speed.get()) / 100.0) * 1.0 
         
         if v>0:
             tick = int(60/v)
+=======
+        tick = int(((100 - self.speed.get()) / 100.0) * 800 + 2) 
+        if self.speed.get()>0:
+>>>>>>> e97c7fa2a16f4bf34046d1cf9ab15b150f3b6de8
             self.plot_step()
             self.after(tick, self.schedule_next_step)
         else:
