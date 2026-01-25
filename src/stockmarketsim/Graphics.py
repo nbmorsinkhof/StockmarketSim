@@ -33,21 +33,50 @@ class Graphics(tk.Tk):
         controls_row = tk.Frame(self)
         controls_row.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
         
-        left = tk.Frame(controls_row)
-        left.pack(side=tk.LEFT, padx=10)
+        # ScrollBar
+        controls_row = tk.Frame(self)
+        controls_row.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
+
+        # Canvas is the scrollable viewport
+        controls_canvas = tk.Canvas(controls_row, highlightthickness=0, height=140)  # choose a height
+        controls_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Scrollbar controls the canvas
+        vscroll = tk.Scrollbar(controls_row, orient="vertical", command=controls_canvas.yview)
+        vscroll.pack(side=tk.RIGHT, fill=tk.Y)
+        controls_canvas.configure(yscrollcommand=vscroll.set)
+
+        # LEft frame
+        #left = tk.Frame(controls_row)
+        #left.pack(side=tk.LEFT, padx=10)
+        left = tk.Frame(controls_canvas)
+        win_id = controls_canvas.create_window((0, 0), window=left, anchor="nw")
+        
+        def _on_frame_configure(event=None):
+            controls_canvas.configure(scrollregion=controls_canvas.bbox("all"))
+
+        left.bind("<Configure>", _on_frame_configure)
+
+        def _on_canvas_configure(event):
+            controls_canvas.itemconfigure(win_id, width=event.width)
+
+        controls_canvas.bind("<Configure>", _on_canvas_configure)
+        def _on_mousewheel(event):
+            # Windows/macOS
+            controls_canvas.yview_scroll(-1 if event.delta > 0 else 1, "units")
+
+        controls_canvas.bind_all("<MouseWheel>", _on_mousewheel)      # Windows/macOS
         #LOAD DATA
         self.data_path = tk.StringVar()
         tk.Button(left, text="Load Data", command=self.browse_files).grid(row=2, column=0, padx=5, pady=2, sticky='w')
         
-        tk.Entry(left, textvariable=self.data_path, width=30).grid(row=2, column=1, padx=5, pady=2, sticky="w")
-        
         # 3. Button to (re)draw the candles
-        button = tk.Button(left, text="Draw candlesticks", command=self.update_plot).grid(row=0, column=0, padx=5, pady=2, sticky="w")
+        button = tk.Button(left, text="Update Plot", command=self.update_plot).grid(row=0, column=0, padx=5, pady=2, sticky="w")
         #button.pack(side=tk.BOTTOM, pady=10)
 
         # 5. add bollinger
         # Row container at the bottom
-        button_bollinger = tk.Button(left, text='Bollinger', command=self.add_bollinger).grid(row=1, column=0, padx=5, pady=2, sticky="w")
+        button_bollinger = tk.Button(left, text='Bollfinger', command=self.add_bollinger).grid(row=1, column=0, padx=5, pady=2, sticky="w")
 
         # Get bollinger window size
         self.input_bollinger_length = tk.StringVar()
@@ -62,7 +91,7 @@ class Graphics(tk.Tk):
         tk.Entry(left, textvariable=self.window_length_x).grid(row=3, column=1, pady=2, padx=5, sticky='w')
         self.xwindowLength = tk.IntVar()
         tk.Scale(left, variable = self.xwindowLength, from_=0, to_=100, orient="horizontal").grid(row=3, column=2, pady=2, padx=5, sticky='w')
-       
+
         # Set Date
         self.first_date = tk.StringVar()
         tk.Button(left, text='Set Date', command=self.set_first_date).grid(row=5, column=0, pady=2, padx=5, sticky='w')
@@ -81,13 +110,11 @@ class Graphics(tk.Tk):
         #STEP
         button_update = tk.Button(right, text="Step next", command=self.plot_step).grid(row=0, column=1, pady=2, padx=5, sticky='w')#pack(side=tk.LEFT, padx=5)
         # Run 
-        button_run = tk.Button(right, text='Run', command=self.run).grid(row=0, column=2, pady=2, padx=5, sticky='w')#pack(side=tk.LEFT, padx=5)
+        button_run = tk.Button(right, text="Run/Stop", command=self.run).grid(row=0, column=2, pady=2, padx=5, sticky='w')#pack(side=tk.LEFT, padx=5)
 
-        # Stop
-        button_stop = tk.Button(right, text='Stop', command=self.stop_run).grid(row=0, column=3, pady=2, padx=5, sticky='w')#pack(side=tk.LEFT, padx=5)
 
         self.speed = tk.IntVar()
-        tk.Scale(right, variable = self.speed, from_=0, to_=100, orient="horizontal").grid(row=1, column=0, pady=2, padx=5, sticky='w')
+        tk.Scale(right, variable = self.speed, from_=0, to_=100, orient="horizontal", length=140).grid(row=1, column=0, pady=2, padx=5, sticky='w')
 
 
     def update_plot(self):
@@ -108,18 +135,15 @@ class Graphics(tk.Tk):
             indicator.update()
         self.update_plot()
 
-    def stop_run(self):
-        self.is_running = False
-
     def run(self):
-        self.is_running = True
+        self.is_running = not self.is_running
         self.schedule_next_step()
 
     def schedule_next_step(self):
         if not self.is_running:
             return
         
-        tick = int(((100 - self.speed.get()) / 100.0) * 200 + 10) 
+        tick = int(((100 - self.speed.get()) / 100.0) * 200 + 2) 
         if self.speed.get()>0:
             self.plot_step()
             
