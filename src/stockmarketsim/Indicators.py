@@ -3,8 +3,9 @@ from matplotlib import pyplot as plt
 
 
 class bollinger:
-    def __init__(self, LoadData, N):
+    def __init__(self, LoadData, N, N_std=0):
         self.N_tail=N
+        self.N_std = N_std
         self.loader = LoadData
         self.mean = 0
         self.std = 0
@@ -29,8 +30,8 @@ class bollinger:
             mean = np.mean(data[idx_boll-self.N_tail: idx_boll])
             std = np.std(data[idx_boll-self.N_tail: idx_boll])
 
-            self.upper_band[idx] = mean + 3*std
-            self.lower_band[idx] = mean - 3*std
+            self.upper_band[idx] = mean + self.N_std*std
+            self.lower_band[idx] = mean - self.N_std*std
             self.middle_band[idx] = mean
 
     def plot(self, ax):
