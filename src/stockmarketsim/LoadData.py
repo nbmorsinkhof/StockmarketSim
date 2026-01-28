@@ -56,13 +56,14 @@ class LoadData:
         ax.plot(x, low, linewidth=1, color='red')
         print(len(self.indicators))
         for indicator in self.indicators:
-            indicator.plot(ax)
+            indicator["object"].plot(ax)
 
         ax.set_xlabel("Index")
         ax.set_ylabel("Price")
         ax.set_title("Candlestick chart (manual)")
         ax.grid(True)
         ax.set_xlim(-1, len(high) + int(len(high)*xwindowLength/100))
+        ax.legend()
         
 
     def plot_step(self):
