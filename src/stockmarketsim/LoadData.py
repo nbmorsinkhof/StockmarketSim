@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.patches import Rectangle  # better than plt.Rectangle
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-
+from kraken.spot import Market as SpotMarket
+import time
 
 class LoadData:
     def __init__(self, file):
@@ -13,26 +14,38 @@ class LoadData:
         self.window = [3050-self.N_window, 3050] # window [t1, t2]
         self.indicators = []
         self.current_date = ''
+        self.symbol = "XETHZUSD"
 
     def load_data(self, file_path = ''):
-        if file_path == '':
+        now_s = int(time.time())
+        symbol = self.symbol
+        self.last_update_time = now_s
+        try:
+            resp = SpotMarket().get_ohlc(
+                tick_type="trade",
+                symbol=symbol,
+                resolution="5m",
+                from_=now_s-100000,
+                to=now_s,
+            )
+        except Exception as e:
+            print("Fetching ohlc futures failed: ", e)
+        # Response looks like: {"candles": [{"time": 1680624000000, "open": "...", ...}], "more_candles": True/False}
+        candles = resp.get("candles", [])
+
+        df = pd.DataFrame(candles)
+        if df.empty:
+            self.df_data = df
             return
-        
-        df = pd.read_excel(file_path)
-        df = df.iloc[:, 0:5]
-        df.columns = ['date', 'open', 'high', 'low', 'close']
 
+        # To float type
+        df["time"] = pd.to_datetime(df["time"].astype(int), unit="ms", utc=True)
+        for c in ["open", "high", "low", "close", "volume"]:
+            df[c] = df[c].astype(float)
 
-        for col in df.columns:
-            if col != "date":
-                s = df[col].astype(str)
-                s = (
-                    s.str.replace(";", "", regex=False)
-                    .str.replace(",", ".", regex=False)
-                )
-                df[col] = pd.to_numeric(s, errors="coerce")
+        self.df_data = df[["time", "open", "high", "low", "close", "volume"]]
 
-        self.df_data = df
+        return
 
     def plot_klines(self, ax, xwindowLength: int):
         """
