@@ -10,6 +10,7 @@ class LoadData:
         self.df_data = pd.DataFrame({})
         self.df_part = pd.DataFrame({})
         self.N_window = 50
+        self.total_window_length = self.N_window
         self.window = [3050-self.N_window, 3050] # window [t1, t2]
         self.indicators = []
         self.current_date = ''
@@ -40,7 +41,6 @@ class LoadData:
         Does NOT create its own Figure or call plt.show().
         """
         df = self.df_data
-
         # pick a slice
         df.iloc[self.window[0]: self.window[1], :].reset_index(drop=True)
         
@@ -48,7 +48,7 @@ class LoadData:
         low = np.array(df["low"]).astype(float)[self.window[0]: self.window[1]]
 
         x = np.arange(len(high))  # x indices from 0 to len(df_part)-1
-
+        self.total_window_length = len(high) + int(len(high)*xwindowLength/100)
         ax.clear()  # clear previous contents
 
         #indicators
@@ -63,6 +63,8 @@ class LoadData:
         ax.set_title("Candlestick chart (manual)")
         ax.grid(True)
         ax.set_xlim(-1, len(high) + int(len(high)*xwindowLength/100))
+        alpha = 0.08
+        ax.set_ylim(np.min(low)*(1-alpha), np.max(high)*(1+alpha))
         ax.legend()
         
 

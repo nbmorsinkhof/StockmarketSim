@@ -20,7 +20,6 @@ class Graphics(tk.Tk):
         self.fig = Figure(figsize=(10, 5), dpi=100)
         self.ax = self.fig.add_subplot(111)
 
-        
         # 2. Embed the Figure in Tkinter via FigureCanvasTkAgg
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.draw()
