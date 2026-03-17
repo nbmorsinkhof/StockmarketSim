@@ -33,6 +33,9 @@ class Graphics(tk.Tk):
         controls_row = tk.Frame(self)
         controls_row.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
         
+        # Connect click event
+        self.canvas.mpl_connect("button_press_event", self.on_click)
+        
         # ScrollBar
         controls_row = tk.Frame(self)
         controls_row.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
@@ -117,6 +120,10 @@ class Graphics(tk.Tk):
 
         self.date_label = tk.StringVar(value=f"date at index 0: {loader.current_date}")
         tk.Label(left, textvariable=self.date_label ).grid(row=5, column=0, sticky="w", padx=(0, 8))
+        
+        # Polynomial
+        tk.Button(left, text='Remove PolyPoint', command=self.remove_polypoint).grid(row=8, column=0, pady=2, padx=5, sticky='w')
+
         
         #RIGHT
         right = tk.Frame(controls_row)
@@ -253,3 +260,46 @@ class Graphics(tk.Tk):
         date = self.first_date.get()
         self.loader.set_date(date=date)
         self.update_plot()
+        
+    
+    def remove_polypoint(self):
+        for idx in range(0, len(self.indicators)):
+            if (self.indicators[idx])["type"] == "polynomial":
+                # Functions returns points
+                len_points = self.indicators[idx]["object"].remove_point()
+                if len_points<1:
+                    self.indicators.pop(idx)
+        self.update_plot()
+        
+    
+    def on_click(self, event):
+        if event.inaxes == self.ax:
+            x = event.xdata
+            y = event.ydata
+            print(f"Clicked at x={x:.3f}, y={y:.3f}")
+            if len(self.indicators) < 1:
+                print("Creating Indicator")
+                indicator = {
+                    "type": "polynomial",
+                    "object": Indicators.Polynomial(LoadData=self.loader)
+                }
+                indicator["object"].add_point(x, y)
+                self.indicators.append(indicator)
+                self.update_plot()
+                return
+            
+            for idx in range(0, len(self.indicators)):
+                if (self.indicators[idx])["type"] == "polynomial":
+                    self.indicators[idx]["object"].add_point(x, y)
+                    self.update_plot()
+                    break
+                else:
+                    print("Creating Indicator")
+                    indicator = {
+                        "type": "polynomial",
+                        "object": Indicators.Polynomial(LoadData=self.loader)
+                    }
+                    indicator["object"].add_point(x, y)
+                    self.indicators.append(indicator)
+                    self.update_plot()
+                    break

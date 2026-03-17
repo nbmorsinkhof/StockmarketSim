@@ -65,6 +65,50 @@ class MovingAverage:
         print(self.middle_band)
         ax.plot(self.middle_band, color='orange', linestyle = "--" ,label=("moving average_"+ str(self.N_tail)))
 
-
-
+class Polynomial:
+    def __init__(self, LoadData):
+        self.loader = LoadData
+        self.points_x = []
+        self.points_y = []
+        self.poly_fit = np.linspace(np.nan, np.nan, self.loader.N_window)
+        self.poly_fit_x = np.linspace(0, self.loader.N_window-1, self.loader.N_window)
+        self.poly_coef = [np.nan, np.nan]
+        self.N_first_point = 0
+        self.X_first_points = []
+        
+    def calc_poly(self):
+        if len(self.points_x)>2:
+            x_points = np.array(self.points_x) -(self.loader.window[0] - self.N_first_point)
+            self.poly_coef = np.polyfit(x_points, self.points_y, deg=2)
     
+    def add_point(self, x, y):
+        self.points_x.append(x)
+        self.points_y.append(y)
+        if len(self.points_x)==1:
+            self.N_first_point = self.loader.window[0]
+        self.calc_poly()
+        
+    def remove_point(self):
+        self.points_x.pop(-1)
+        self.points_y.pop(-1)
+        return len(self.points_x)
+        
+        
+    def update(self):
+        self.calc_poly()
+        if not np.isnan(self.poly_coef).any():
+            a, b, c = self.poly_coef
+            self.poly_fit = a * (self.poly_fit_x)**2 + b * (self.poly_fit_x) + c
+            mask = np.arange(len(self.poly_fit)) >= (self.points_x[0]-(self.loader.window[0] - self.N_first_point))
+            self.poly_fit = np.where(mask, self.poly_fit, np.nan)
+            
+    
+    def plot(self, ax):
+        if not np.isnan(self.poly_coef).any():
+            a, b, c = self.poly_coef
+            self.poly_fit = a * (self.poly_fit_x)**2 + b * (self.poly_fit_x) + c
+            mask = np.arange(len(self.poly_fit)) >= (self.points_x[0]-(self.loader.window[0] - self.N_first_point))
+            self.poly_fit = np.where(mask, self.poly_fit, np.nan)
+        ax.plot(self.poly_fit)
+        ax.scatter(np.array(self.points_x)-(self.loader.window[0] - self.N_first_point), np.array(self.points_y), color="red")
+        
