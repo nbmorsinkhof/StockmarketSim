@@ -118,6 +118,11 @@ class Graphics(tk.Tk):
         self.date_label = tk.StringVar(value=f"date at index 0: {loader.current_date}")
         tk.Label(left, textvariable=self.date_label ).grid(row=5, column=0, sticky="w", padx=(0, 8))
         
+        # Top Fractals
+        tk.Button(left, text='Add Top Fractals', command=self.set_top_fractals).grid(row=8, column=0, pady=2, padx=5, sticky='w')
+        tk.Button(left, text='Remove Top Fractals', command=self.remove_top_fractals).grid(row=9, column=0, pady=2, padx=5, sticky='w')
+        self.fractal_layers = tk.StringVar()
+        tk.Entry(left, textvariable=self.fractal_layers).grid(row=8, column=2, pady=2, padx=5, sticky='w')
         #RIGHT
         right = tk.Frame(controls_row)
         right.pack(side=tk.RIGHT, padx=10)
@@ -150,6 +155,9 @@ class Graphics(tk.Tk):
         if self.is_running:
             return
         self.loader.plot_step_back()
+        for idx, indicator in enumerate(self.indicators):
+            if indicator['type'] == 'top_fractals':
+                indicator["object"].step_back()
         for indicator in self.indicators:
             indicator["object"].update()
         self.update_plot()
@@ -218,6 +226,29 @@ class Graphics(tk.Tk):
     def remove_ma(self):
         for idx in range(0, len(self.indicators)):
             if (self.indicators[idx])["type"] == "moving_average":
+                self.indicators.pop(idx)
+        self.update_plot()
+        
+    def set_top_fractals(self):
+        for idx, indicator in enumerate(self.indicators):
+            if indicator['type'] == 'top_fractals':
+                return
+        layers = int(self.fractal_layers.get())
+        
+        if layers>0 and layers<5:
+            layers = layers
+        else:
+            layers=1
+        indicator = {
+                "type": "top_fractals",
+                "object": Indicators.TopFractal(LoadData=self.loader, N_layers=layers)
+            }
+        self.indicators.append(indicator)
+        self.update_plot()
+    
+    def remove_top_fractals(self):
+        for idx in range(0, len(self.indicators)):
+            if (self.indicators[idx])["type"] == "top_fractals":
                 self.indicators.pop(idx)
         self.update_plot()
         
