@@ -112,12 +112,13 @@ class Graphics(tk.Tk):
 
         # Set Date
         self.first_date = tk.StringVar()
+        self.end_date = tk.StringVar()
         tk.Button(left, text='Set Date', command=self.set_first_date).grid(row=7, column=0, pady=2, padx=5, sticky='w')
         tk.Entry(left, textvariable=self.first_date).grid(row=7, column=1, pady=2, padx=5, sticky='w')
-        
+        tk.Entry(left, textvariable=self.end_date).grid(row=7, column=2, pady=2, padx=5, sticky='w')
         # Date label
 
-        self.date_label = tk.StringVar(value=f"date at index 0: {loader.current_date}")
+        self.date_label = tk.StringVar(value=f"date from: {loader.current_date} , untill {loader.end_date}" )
         tk.Label(left, textvariable=self.date_label ).grid(row=5, column=0, sticky="w", padx=(0, 8))
         
         # Polynomial
@@ -144,7 +145,7 @@ class Graphics(tk.Tk):
             indicator["object"].update()
         self.loader.plot_klines(self.ax, self.xwindowLength.get())
         self.canvas.draw_idle()
-        self.date_label.set(f"date at index {0}: {self.loader.current_date}")
+        self.date_label.set(f"date at index {0}: {self.loader.current_date} , untill: {self.loader.end_date}" )
 
     def plot_step(self):
         self.loader.plot_step()
@@ -257,7 +258,9 @@ class Graphics(tk.Tk):
         
     def set_first_date(self):
         date = self.first_date.get()
-        self.loader.set_date(date=date)
+        end_date = self.end_date.get()
+        print(date, end_date)
+        self.loader.set_date(date=date, end_date=end_date)
         self.update_plot()
         
     
