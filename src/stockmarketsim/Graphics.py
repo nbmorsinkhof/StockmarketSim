@@ -182,7 +182,7 @@ class Graphics(tk.Tk):
     def add_bollinger(self):
         for idx, indicator in enumerate(self.indicators):
             if indicator['type'] == 'bollinger':
-                self.indicators.pop(idx);
+                self.indicators.pop(idx)
     
         print("sting_var:", self.input_bollinger_length.get())
         N = int(self.input_bollinger_length.get())
@@ -294,14 +294,15 @@ class Graphics(tk.Tk):
                 if (self.indicators[idx])["type"] == "polynomial":
                     self.indicators[idx]["object"].add_point(x, y)
                     self.update_plot()
-                    break
-                else:
-                    print("Creating Indicator")
-                    indicator = {
-                        "type": "polynomial",
-                        "object": Indicators.Polynomial(LoadData=self.loader)
-                    }
-                    indicator["object"].add_point(x, y)
-                    self.indicators.append(indicator)
-                    self.update_plot()
-                    break
+                    return 
+
+                
+            print("Creating Indicator: poly")
+            indicator = {
+                "type": "polynomial",
+                "object": Indicators.Polynomial(LoadData=self.loader)
+            }
+            indicator["object"].add_point(x, y)
+            self.indicators.append(indicator)
+            self.update_plot()
+                    

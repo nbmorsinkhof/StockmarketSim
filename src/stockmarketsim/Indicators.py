@@ -20,6 +20,7 @@ class bollinger:
         self.plot()
 
     def update(self):
+        print("update bollinger")
         idx_end = self.loader.window[-1]
         open = self.loader.df_data["open"].to_numpy(dtype = np.float64)
         low = self.loader.df_data["low"].to_numpy(dtype = np.float64)
@@ -36,7 +37,6 @@ class bollinger:
             self.middle_band[idx] = mean
 
     def plot(self, ax):
-        print(self.middle_band)
         ax.plot(self.middle_band, color='blue', label='Bollinger', linewidth=0.5)
         ax.plot(self.lower_band, linestyle='--', color='blue', linewidth=0.5)
         ax.plot(self.upper_band, linestyle='--', color='blue', linewidth=0.5)
@@ -81,9 +81,12 @@ class Polynomial:
         self.X_first_points = []
         
     def calc_poly(self):
+        print("points: ", self.points_x)
         if len(self.points_x)>2:
+            print("calc_poly")
             x_points = np.array(self.points_x) -(self.loader.window[0] - self.N_first_point)
             self.poly_coef = np.polyfit(x_points, self.points_y, deg=2)
+            print("coefs: ", self.poly_coef)
     
     def add_point(self, x, y):
         if len(self.points_x)<1:
@@ -93,11 +96,13 @@ class Polynomial:
         self.calc_poly()
         
     def remove_point(self):
+        print("remove poly points")
         self.points_x.pop(-1)
         self.points_y.pop(-1)
         return len(self.points_x)
         
     def update(self):
+        print("Update poly")
         self.calc_poly()
         if not np.isnan(self.poly_coef).any():
             a, b, c = self.poly_coef
@@ -107,6 +112,7 @@ class Polynomial:
             self.poly_fit = np.where(mask, self.poly_fit, np.nan)
             
     def plot(self, ax):
+        print("plot poly")
         if not np.isnan(self.poly_coef).any():
             a, b, c = self.poly_coef
             x = np.linspace(0, self.loader.total_window_length-1, self.loader.total_window_length)

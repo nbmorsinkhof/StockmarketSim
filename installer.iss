@@ -1,6 +1,6 @@
 [Setup]
 AppName=StockmarketSim
-AppVersion=2.5.0
+AppVersion=2.6.0
 DefaultDirName={autopf}\StockmarketSim
 DefaultGroupName=StockmarketSim
 OutputDir=.

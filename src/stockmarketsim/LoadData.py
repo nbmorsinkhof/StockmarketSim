@@ -45,11 +45,10 @@ class LoadData:
         """
         df = self.df_data
         # pick a slice
-        df.iloc[self.window[0]: self.window[1], :].reset_index(drop=True)
-        
-        high = np.array(df["high"]).astype(float)[self.window[0]: self.window[1]]
-        low = np.array(df["low"]).astype(float)[self.window[0]: self.window[1]]
+        df = self.df_data.iloc[self.window[0]:self.window[1], :].reset_index(drop=True)
 
+        high = df["high"].astype(float).to_numpy()
+        low = df["low"].astype(float).to_numpy()
         x = np.arange(len(high))  # x indices from 0 to len(df_part)-1
         self.total_window_length = len(high) + int(len(high)*xwindowLength/100)
         ax.clear()  # clear previous contents
@@ -94,6 +93,7 @@ class LoadData:
         self.indicators = indicators
         
     def update_current_date(self):
+        print("updating current_date: ", self.df_data['date'].iloc[self.window[1]], "with index: ",self.window[1])
         self.current_date = str(self.df_data['date'].iloc[self.window[0]])
         self.end_date = str(self.df_data['date'].iloc[self.window[1]])
     
@@ -104,21 +104,38 @@ class LoadData:
     def set_date(self, date: str, end_date: str):
         date_str = date + " 00:00:00"
         end_date_str = end_date + " 00:00:00"
-        matches_first = self.df_data.index[self.df_data["date"] == date_str]
+
+        matches_first = np.where(self.df_data.index[self.df_data["date"] == date_str])[0]
         matches_second = self.df_data.index[self.df_data["date"] == end_date_str]
-        idx_first = matches_first[0] if not matches_first.empty else None
-        idx_second = matches_second[0] if not matches_second.empty else None
         
-        print("SETTING DATE: ",  matches_first, matches_second, self.df_data.iloc[matches_second[0]])
-        if idx_first !=None and idx_second!=None:
+        matches_second = np.where(self.df_data["date"] == end_date_str)[0]
+
+        idx_first = matches_first[0] if len(matches_first) > 0 else None
+        idx_second = matches_second[0] if len(matches_second) > 0 else None
+
+        print("SETTING DATE:")
+        print("  input start:", date)
+        print("  input end  :", end_date)
+        print("  matches_first :", matches_first)
+        print("  matches_second:", matches_second)
+
+        if idx_second is not None:
+            print("  row at idx_second:\n", self.df_data.loc[idx_second])
+
+        if idx_first is not None and idx_second is not None:
             self.window[0] = idx_first
             self.window[1] = idx_second
-        elif idx_first ==None and idx_second!=None:
-            self.window[0] = idx_second - self.N_window
-            self.window[1] = idx_second
-        elif idx_first !=None and idx_second==None:
+
+        elif idx_first is None and idx_second is not None:
+            print("End date:", self.df_data.loc[idx_second, "date"])
+            self.window[0] = idx_second - self.N_window 
+            self.window[1] = idx_second 
+
+        elif idx_first is not None and idx_second is None:
+            print("Start date:", self.df_data.loc[idx_first, "date"])
             self.window[0] = idx_first
             self.window[1] = idx_first + self.N_window
+
         else:
             return
             
